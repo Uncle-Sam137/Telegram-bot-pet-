@@ -52,7 +52,7 @@ async def shar(callback: CallbackQuery, state: FSMContext):
     await state.set_state(States.shar_state)
     await callback.message.edit_text('Привет, я магический шар, и я знаю ответ на любой твой вопрос.\nСпрашивай, что хочешь. Но ответ будет только да или нет ... А на, что ты расчитывал от меня?')
 
-# Пупупупу - хихи хаха
+# Пупупу - хихи хаха
 @dp.message(States.shar_state)
 async def shar_class(message: Message, state: FSMContext):
     sp = [
