@@ -8,6 +8,8 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
 from Games import ugaday_slova, ugaday_shislo, cezar, gen_password, wether_parse
 from keyboards import kbs
+import aiosqlite
+from datetime import datetime
 
 # Инициализация диспетчера
 dp = Dispatcher()
@@ -21,20 +23,61 @@ class States(StatesGroup):
     gen_pas_state = State()  # Состояние для генерации паролей
     wether_state = State()  # Состояние для прогноза погоды
 
+# Проверка через базу данных, впервые ли пользователь пользуется ботом
+async def check_db(user_id, full_name, user_name):
+    # Открываем асинхронное соединение с базой данных
+    async with aiosqlite.connect('users.db') as connect:
+        async with connect.cursor() as cursor:
+            # Проверяем, есть ли уже пользователь с таким user_id
+            await cursor.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
+            check_user = await cursor.fetchone()
+
+            # Если пользователь не найден, добавляем его в базу
+            if check_user is None:
+                # Получаем текущую дату и время
+                current_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+                # Вставляем нового пользователя в таблицу
+                await cursor.execute(
+                    'INSERT INTO users (user_id, full_name, date, user_name) VALUES (?, ?, ?, ?)',
+                    (user_id, full_name, current_time, user_name)
+                )
+                # Сохраняем изменения в базе данных
+                await connect.commit()
+
+                return False  # Пользователь был добавлен
+            else:
+                # Если пользователь найден, возвращаем True
+                return True  # Пользователь уже существует
+
 # Хэндлер для команды /start
 @dp.message(CommandStart())
 async def start(message: Message):
-    await message.answer(
-        f"Привет, <b>{message.from_user.full_name}</b>! 👋 Я твой универсальный помощник!\n\n"
-        f"✨Вот что я умею:\n"
-        f"🎮 Игры: сыграй в увлекательные игры.\n"
-        f"☀️ Прогноз погоды: узнай погоду в любом городе мира.\n"
-        f"🔒 Шифрование и дешифрование текста: сохраняй свои данные в безопасности.\n"
-        f"🔑 Генерация паролей: создай надёжные пароли для твоих аккаунтов.\n\n"
-        f"Как пользоваться:\n"
-        f"Все доступные функции находятся на кнопках ниже ⬇️. Просто нажми на нужную!",
-        parse_mode='HTML', reply_markup=kbs.menu
-    )
+    if await check_db(message.from_user.id, message.from_user.full_name, message.from_user.username):
+        await message.answer(
+            f"И снова здрасьте, <b>{message.from_user.full_name}</b>! 👋 Я все еще твой универсальный помощник!\n\n"
+            f"☺️ Мне очень приятно, что ты решил еще раз ко мне заглянуть\n\n"
+            f"✨Давай напомню что я умею:\n"
+            f"🎮 Игры: сыграй в увлекательные игры.\n"
+            f"☀️ Прогноз погоды: узнай погоду в любом городе мира.\n"
+            f"🔒 Шифрование и дешифрование текста: сохраняй свои данные в безопасности.\n"
+            f"🔑 Генерация паролей: создай надёжные пароли для твоих аккаунтов.\n\n"
+            f"Как пользоваться:\n"
+            f"Все доступные функции находятся на кнопках ниже ⬇️. Просто нажми на нужную!",
+            parse_mode='HTML', reply_markup=kbs.menu
+        )
+    else:
+        await message.answer(
+            f"Привет, <b>{message.from_user.full_name}</b>! 👋 Я твой универсальный помощник!\n\n"
+            f"✨Вот что я умею:\n"
+            f"🎮 Игры: сыграй в увлекательные игры.\n"
+            f"☀️ Прогноз погоды: узнай погоду в любом городе мира.\n"
+            f"🔒 Шифрование и дешифрование текста: сохраняй свои данные в безопасности.\n"
+            f"🔑 Генерация паролей: создай надёжные пароли для твоих аккаунтов.\n\n"
+            f"Как пользоваться:\n"
+            f"Все доступные функции находятся на кнопках ниже ⬇️. Просто нажми на нужную!",
+            parse_mode='HTML', reply_markup=kbs.menu
+        )
 
 # Хэндлер для игры "Виселица"
 @dp.callback_query(F.data == 'visel')
