@@ -1,8 +1,10 @@
 import random
 
 
-
 def chooseword():
+    """
+    Выбирает случайное слово из списка для игры.
+    """
     words = [
         "год",
         "человек",
@@ -1005,51 +1007,74 @@ def chooseword():
         "строка",
         "единица",
     ]
+    return random.choice(words)  # Возвращаем случайное слово из списка
 
-    x = random.choice(words)
-
-    return x.upper()
 
 def display_hangman(tries):
+    """
+    Отображает текущее состояние виселицы в зависимости от количества оставшихся попыток.
+
+    :param tries: Количество оставшихся попыток
+    :return: Строка, представляющая изображение виселицы
+    """
     stages = [
-        " --------\n |      |\n |      O\n |     \\|/\n |      |\n |     / \\\n -",
-        " --------\n |      |\n |      O\n |     \\|/\n |      |\n |     / \n -",
-        " --------\n |      |\n |      O\n |     \\|/\n |      |\n |\n -",
-        " --------\n |      |\n |      O\n |     \\|\n |      |\n |\n -",
-        " --------\n |      |\n |      O\n |      |\n |      |\n |\n -",
-        " --------\n |      |\n |      O\n |\n |\n |\n -",
-        " --------\n |      |\n |\n |\n |\n |\n -",
+        " --------\n |      |\n |      O\n |     \\|/\n |      |\n |     / \\\n -",  # 0 попыток
+        " --------\n |      |\n |      O\n |     \\|/\n |      |\n |     / \n -",  # 1 попытка
+        " --------\n |      |\n |      O\n |     \\|/\n |      |\n |\n -",  # 2 попытки
+        " --------\n |      |\n |      O\n |     \\|\n |      |\n |\n -",  # 3 попытки
+        " --------\n |      |\n |      O\n |      |\n |      |\n |\n -",  # 4 попытки
+        " --------\n |      |\n |      O\n |\n |\n |\n -",  # 5 попыток
+        " --------\n |      |\n |\n |\n |\n |\n -",  # 6 попыток
     ]
     return stages[tries]
 
+
 async def play(letter, state):
+    """
+    Основная логика игры: проверяет букву, обновляет состояние и возвращает текущий статус игры.
+
+    :param letter: Буква, которую пользователь пытается угадать
+    :param state: Состояние игры, содержащее информацию о текущем состоянии
+    :return: Строка с результатом попытки (победа, поражение или текущий статус)
+    """
     # Извлекаем данные из состояния
     data = await state.get_data()
     word = data.get("word")  # Загаданное слово
     tries = data.get("tries", 6)  # Количество попыток
-    guessed_letters = data.get("guessed_letters", [])  # Угаданные буквы
-    display_word = data.get("display_word", ["_" for _ in word])  # Текущее состояние слова
+    guessed_letters = data.get("guessed_letters", [])  # Список угаданных букв
+    display_word = data.get("display_word", ["_" for _ in word])  # Текущее отображение слова
 
+    # Приводим букву к верхнему регистру
     letter = letter.upper()
+    word = word.upper()
+    # Проверяем, была ли уже угадана эта буква
     if letter in guessed_letters:
-        return "Эта буква уже была!"
+        return "⛔️ Эта буква уже была!"
 
+    # Добавляем букву в список угаданных
     guessed_letters.append(letter)
+
+    # Проверяем, присутствует ли буква в загаданном слове
     if letter in word:
-        # Открываем буквы
+        # Открываем буквы в отображении
         for i, char in enumerate(word):
             if char == letter:
                 display_word[i] = letter
+
+        # Проверяем, угадано ли всё слово
         if "_" not in display_word:
-            await state.clear()
-            return f"Поздравляю, вы выиграли! Слово было: {word}"
+            return f"🥳 Поздравляю, вы выиграли! Слово было: {word}"
+
     else:
+        # Уменьшаем количество попыток, если буква не угадана
         tries -= 1
         if tries == 0:
-            await state.clear()
-            return f"Вы проиграли. Загаданное слово было: {word}"
+            await state.clear()  # Очищаем состояние игры
+            return f"😔 Вы проиграли. Загаданное слово было: {word}"
 
-    # Сохраняем обновленные данные в состоянии
+    # Сохраняем обновлённые данные в состоянии
     await state.update_data(word=word, tries=tries, guessed_letters=guessed_letters, display_word=display_word)
+
+    # Возвращаем текущее состояние игры
     hangman_stage = display_hangman(tries)
     return f"{hangman_stage}\n\nСлово: {' '.join(display_word)}\n\nПопыток осталось: {tries}"
