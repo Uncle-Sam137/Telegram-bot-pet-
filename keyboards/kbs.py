@@ -5,6 +5,7 @@ menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Числовая угадайка', callback_data='ch_ug')],
     [InlineKeyboardButton(text='Де/Шифрование текста', callback_data='ces')],
     [InlineKeyboardButton(text='Генератор паролей', callback_data='gen_pas')],
+    [InlineKeyboardButton(text='Какая сейчас погода?', callback_data='wether')],
 ])
 
 
