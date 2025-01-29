@@ -2,13 +2,13 @@ import random
 import asyncio
 import config
 from aiogram import Dispatcher, Bot, F
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, CallbackQuery
 from Games import ugaday_slova, ugaday_shislo, cezar, gen_password, wether_parse
 from keyboards import kbs
-from work_with_dp import check_db
+from work_with_dp import check_db, list_users
 
 # Инициализация диспетчера
 dp = Dispatcher()
@@ -22,6 +22,15 @@ class States(StatesGroup):
     gen_pas_state = State()  # Состояние для генерации паролей
     wether_state = State()  # Состояние для прогноза погоды
 
+
+@dp.message(Command('admin'))
+async def admin(message: Message):
+    if int(message.from_user.id) == int(config.admin_id):
+        await message.answer(await list_users())
+    else:
+        await message.answer('❌❌❌❌❌\n\n'
+                             'Не-не-не\n'
+                             'Тебе сюда нельзя!')
 
 
 # Хэндлер для команды /start
