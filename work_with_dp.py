@@ -28,3 +28,23 @@ async def check_db(user_id, full_name, user_name):
             else:
                 # Если пользователь найден, возвращаем True
                 return True  # Пользователь уже существует
+
+
+import aiosqlite
+
+
+async def list_users():
+    # Открываем соединение с базой данных
+    async with aiosqlite.connect('users.db') as connect:
+        # Создаем курсор для выполнения SQL-запросов
+        async with connect.cursor() as cursor:
+            # Выполняем запрос для извлечения данных пользователей
+            await cursor.execute('SELECT ID, full_name, date, user_name FROM users')
+
+            # Извлекаем все строки результата запроса
+            users = await cursor.fetchall()
+
+            # Преобразуем результат в строку, соединяя данные пользователей
+            users_str = '\n'.join([', '.join(map(str, user)) for user in users])
+
+            return users_str
