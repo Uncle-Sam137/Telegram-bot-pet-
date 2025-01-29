@@ -9,8 +9,8 @@ async def play(n, state):
     await state.update_data(iskomoe=x, tries=tries+1)
 
     if n > x:
-        return 'Слишком много, попробуй еще раз'
+        return '❌ Слишком много! Попробуй меньше!'
     elif n < x:
-        return 'Слишком мало, попробуй еще раз'
+        return '❌ Слишком мало! Попробуй больше!'
 
-    return 'Вы угадали, поздравляю!'
+    return '🎉 Поздравляю! Ты угадал число!'
