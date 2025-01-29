@@ -1,24 +1,31 @@
 import random
-import asyncio
 
+# Доступные символы для пароля
 char = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$&?@"
 
 
-async def gen_parol(lenght):
-    rezparol = ""
-    for _ in range(4):
+# Асинхронная функция для генерации пароля
+def gen_parol(length: int) -> str:
+    password = ""
 
-        if _ == 1:
-            rezparol += char[random.randint(61, len(char) - 1)]
-
-        elif _ == 2:
-            rezparol += char[random.randint(9, 35)]
-        elif _ == 3:
-            rezparol += char[random.randint(35, 61)]
+    # Добавляем поочередно символы разных категорий, для соответствия большинства требований при создании пароля
+    for i in range(4):
+        if i == 1:
+            # Добавляем символ из верхнего регистра или спецсимволов
+            password += char[random.randint(61, len(char) - 1)]
+        elif i == 2:
+            # Добавляем символ из цифр
+            password += char[random.randint(9, 35)]
+        elif i == 3:
+            # Добавляем символ из строчных букв
+            password += char[random.randint(35, 61)]
         else:
-            rezparol += char[random.randint(0, 9)]
+            # Добавляем символ из цифр
+            password += char[random.randint(0, 9)]
 
-    for _ in range(lenght - len(rezparol)):
-        rezparol += random.choice(char)
-    return rezparol
+    # Заполняем оставшуюся длину пароля случайными символами
+    for _ in range(length - len(password)):
+        password += random.choice(char)
 
+    # Возвращаем результат
+    return password

@@ -1,13 +1,30 @@
 async def play(n, state):
-    data = await state.get_data()
-    x = data.get('iskomoe')
-    tries = data.get('tries')
-    try:
-        n = int(n)
-    except:
-        return 'Вводить нужно число'
-    await state.update_data(iskomoe=x, tries=tries+1)
+    """
+    Игра "Числовая угадайка". Пользователь должен угадать число, загаданное ботом.
 
+    Аргументы:
+    n (str): Ввод пользователя (предполагаемое число).
+    state (FSMContext): Состояние, хранящее данные о текущем состоянии игры.
+
+    Возвращает:
+    str: Сообщение об успехе или ошибке.
+    """
+    # Получаем данные из состояния игры
+    data = await state.get_data()
+    x = data.get('iskomoe')  # Загаданное число
+    tries = data.get('tries')  # Количество попыток
+
+    try:
+        # Преобразуем введённое значение в целое число
+        n = int(n)
+    except ValueError:
+        # Если преобразование не удалось, возвращаем ошибку
+        return 'Вводить нужно число'
+
+    # Обновляем количество попыток
+    await state.update_data(iskomoe=x, tries=tries + 1)
+
+    # Проверка, угадал ли пользователь число
     if n > x:
         return '❌ Слишком много! Попробуй меньше!'
     elif n < x:
