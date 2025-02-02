@@ -246,8 +246,9 @@ async def wether(callback: CallbackQuery, state: FSMContext):
 # Хэндлер для получения прогноза погоды в конкретном городе
 @dp.message(States.wether_state)
 async def wether_class(message: Message, state: FSMContext):
-    rez = wether_parse.wether_prs(message.text)
+    rez = wether_parse.weather_bs(message.text)
     await message.answer(rez, reply_markup=await kbs.get_keyboard('wether'))
+    await state.clear()
 
 # Хэндлер для возвращения в главное меню
 @dp.callback_query(F.data == 'to_menu')
