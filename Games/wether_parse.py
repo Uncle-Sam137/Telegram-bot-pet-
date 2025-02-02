@@ -4,7 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-def wether_prs(city: str):
+def wether_sl(city: str):
     # Инициализация браузера
     browser = webdriver.Chrome()
 
@@ -54,3 +54,66 @@ def wether_prs(city: str):
     finally:
         # Закрываем браузер в любом случае
         browser.quit()
+
+
+""" 
+    Новый парсер на BeautifulSoup, так как выделенный сервер не позволит работать selenium
+"""
+
+
+import requests
+from bs4 import BeautifulSoup
+
+def weather_bs(city: str):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Referer": "https://www.meteoservice.ru/"
+    }
+
+    # Формируем URL для поиска города
+    search_url = f"https://www.meteoservice.ru/location/search?q={city}"
+
+    try:
+        # Запрос к странице поиска
+        search_response = requests.get(search_url, headers=headers)
+        search_soup = BeautifulSoup(search_response.text, "html.parser")
+        if 'overview' in search_response.url:
+            weather_url = search_response.url.replace("overview", 'now')
+        else:
+
+            # Ищем первую ссылку на страницу погоды
+            first_result = search_soup.find('div', class_="row align-middle margin-bottom-1").find('a')['href']
+            first_result = first_result.replace("overview", 'now')
+
+            # Получаем URL страницы погоды для города
+            weather_url = "https://www.meteoservice.ru" + first_result
+
+        # Запрос к странице с погодой
+        weather_response = requests.get(weather_url, headers=headers)
+        weather_soup = BeautifulSoup(weather_response.text, "html.parser")
+
+        # Получаем температуру
+        temp_now = weather_soup.select_one(".temperature .value").text
+
+        # Получаем описание погоды (облачность, осадки и т. д.)
+        oblaka_now = weather_soup.select(".callout .row .small-12 .margin-bottom-0")[0].text
+        # Получаем "ощущается как"
+        oshush_now = weather_soup.select_one(".feeled-temperature .value").text
+        # Получаем "Влажность"
+        vlazhnost = weather_soup.find('span', string='Влажность').find_next('div', class_='h5 margin-bottom-0').text.strip()
+        # Получаем "Ветер"
+        veter = weather_soup.find('span', string='Ветер').find_next('div', class_='h5 margin-bottom-0').text
+        veter = " ".join(veter.split())
+
+        # Формируем итоговый результат
+        result = (
+            f"{city}\nСейчас {temp_now}\n{oblaka_now}\nОщущается как {oshush_now}\nВлажность {vlazhnost}\nВетер {veter}\n\n"
+            "🙃 Если это не твой город, попробуй написать его точнее!"
+        )
+
+        return result
+
+    except Exception as e:
+        return f"Произошли технические шоколадки🍫🍫🍫\n\nНо я уверен, что погода отличная! ☀️"
+
